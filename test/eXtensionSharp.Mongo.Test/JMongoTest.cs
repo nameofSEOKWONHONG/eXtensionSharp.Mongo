@@ -45,13 +45,15 @@ public class Tests
     public async Task jmongo_batch_insert_test()
     {
         var samples = new List<Sample>();
-         
-        Enumerable.Range(1, 5).ToList().ForEach(i =>
+        var from = DateTime.UtcNow;
+        var i = 1;
+        while (true)
         {
-            var item = new Sample { Name = $"N_TEST", Age = i, CreatedBy = "TEST", CreatedOn = DateTime.UtcNow };
+            if(i > 100) break;
+            var item = new Sample { Name = $"N_TEST", Age = i, CreatedBy = "TEST", CreatedOn = from.AddMinutes(1)};
             samples.Add(item);
-            Thread.Sleep(200);
-        });
+            i++;
+        }
         
         var collection = JMongo<Sample>.Create(_client).GetCollection();
         await collection.InsertManyAsync(samples);
@@ -61,9 +63,9 @@ public class Tests
     public async Task jmongo_select_test()
     {
         var collection = JMongo<Sample>.Create(_client).GetCollection();
-        var date = DateTime.UtcNow;
-        var from = date.xToFromDate();
-        var to = date.xToToDate();
+        var date = DateTime.Now;
+        var from = date.ToUniversalTime();
+        var to = date.ToUniversalTime().AddMinutes(5);
         var item = await collection.AsQueryable().AsQueryable().Where(m => m.CreatedOn >= from && m.CreatedOn < to).ToListAsync();
         Assert.That(item, Is.Not.Null);
     }
