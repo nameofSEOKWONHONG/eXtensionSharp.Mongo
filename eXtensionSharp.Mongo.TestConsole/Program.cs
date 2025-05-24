@@ -10,8 +10,13 @@ services.AddJMongoDb("[enter mongodb connection string]", options =>
 });
 
 var provider = services.BuildServiceProvider();
-
-provider.UseJMongoDbAsync();
+// 스코프를 생성하고 인덱스 초기화 실행
+using (var scope = provider.CreateScope())
+{
+    var runner = scope.ServiceProvider.GetRequiredService<IJMongoIndexInitializerRunner>();
+    runner.Run();
+    // 만약 비동기 메서드라면: await runner.RunAsync();
+}
 
 var factory = provider.GetRequiredService<IJMongoFactory>();
 var collection = factory.Create<SampleDocument>().GetCollection();

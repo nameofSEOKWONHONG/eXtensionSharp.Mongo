@@ -35,9 +35,9 @@ public static class DependencyInjection
         return services;
     }
     
-    public static void UseJMongoDbAsync(this ServiceProvider serviceProvider)
+    public static void UseJMongoDbAsync(this IApplicationBuilder app)
     {
-        using var scope = serviceProvider.CreateScope();
+        using var scope = app.ApplicationServices.CreateScope();
         var runner = scope.ServiceProvider.GetRequiredService<IJMongoIndexInitializerRunner>();
         runner.Run();
     }

@@ -3,7 +3,7 @@ using MongoDB.Driver;
 
 namespace eXtensionSharp.Mongo;
 
-internal sealed class JMongoIndexInitializerRunner : IJMongoIndexInitializerRunner
+public sealed class JMongoIndexInitializerRunner : IJMongoIndexInitializerRunner
 {
     private readonly IEnumerable<IJMongoConfiguration> _implementations;
     private readonly IServiceProvider _provider;

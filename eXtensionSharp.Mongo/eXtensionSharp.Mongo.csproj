@@ -7,7 +7,7 @@
         <Copyright>MIT</Copyright>
         <Product>eXtensionSharp.Mongo</Product>
         <Company>seokwon hong</Company>
-        <Version>0.0.2</Version>        
+        <Version>0.0.3</Version>        
         <Title>eXtensionSharp.Mongo</Title>
         <Description>mongodb extension</Description>
         <PackageProjectUrl>https://github.com/nameofSEOKWONHONG/eXtensionSharp.Mongo</PackageProjectUrl>
