@@ -4,6 +4,17 @@
         <TargetFrameworks>net8.0;net9.0;</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
+        <Copyright>MIT</Copyright>
+        <Product>eXtensionSharp.Mongo</Product>
+        <Company>seokwon hong</Company>
+        <Version>0.0.2</Version>        
+        <Title>eXtensionSharp.Mongo</Title>
+        <Description>mongodb extension</Description>
+        <PackageProjectUrl>https://github.com/nameofSEOKWONHONG/eXtensionSharp.Mongo</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/nameofSEOKWONHONG/eXtensionSharp.Mongo</RepositoryUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>        
+        <PackageTags>c#, mongodb</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>
@@ -11,5 +22,10 @@
       <PackageReference Include="MongoDB.Bson" Version="3.4.0" />
       <PackageReference Include="MongoDB.Driver" Version="3.4.0" />
     </ItemGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
+
 
 </Project>
