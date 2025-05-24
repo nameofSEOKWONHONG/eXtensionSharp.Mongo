@@ -22,24 +22,23 @@ public static class DependencyInjection
         // 1. 등록된 타입 기반 IndexInitializer 자동 등록
         foreach (var initializerType in options.InitializerTypes)
         {
-            services.AddSingleton(typeof(IJMongoIndexInitializer), initializerType);
+            services.AddSingleton(typeof(IJMongoConfiguration), initializerType);
         }
 
         // 2. Runner 등록: Lambda + 구현체 통합 실행
         services.AddSingleton<IJMongoIndexInitializerRunner, JMongoIndexInitializerRunner>(sp =>
             new JMongoIndexInitializerRunner(
-                options.LambdaInitializers,
-                sp.GetServices<IJMongoIndexInitializer>(),
+                sp.GetServices<IJMongoConfiguration>(),
                 sp
             ));
 
         return services;
     }
     
-    public static async Task UseJMongoDbAsync(this ServiceProvider serviceProvider)
+    public static void UseJMongoDbAsync(this ServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
         var runner = scope.ServiceProvider.GetRequiredService<IJMongoIndexInitializerRunner>();
-        await runner.RunAsync();
+        runner.Run();
     }
 }

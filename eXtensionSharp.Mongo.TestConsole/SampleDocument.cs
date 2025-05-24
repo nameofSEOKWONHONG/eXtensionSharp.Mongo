@@ -19,13 +19,12 @@ public class SampleDocument
     [BsonElement("createdAt")] public DateTimeOffset CreatedAt { get; set; }
 }
 
-public class SampleDocumentIndexInitializer: IJMongoIndexInitializer
+public class SampleDocumentConfiguration: IJMongoConfiguration
 {
-    public async Task InitializeIndexesAsync(IServiceProvider provider)
+    public void Configure(IJMongoFactory factory)
     {
-        var factory = provider.GetRequiredService<IJMongoFactory>();
         var collection = factory.Create<SampleDocument>().GetCollection();
-        await collection.Indexes.CreateOneAsync(
+        collection.Indexes.CreateOne(
             new CreateIndexModel<SampleDocument>(
                 Builders<SampleDocument>.IndexKeys.Ascending(x => x.CreatedAt),
                 new CreateIndexOptions { ExpireAfter = TimeSpan.FromDays(2) }

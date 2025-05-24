@@ -1,8 +1,6 @@
-﻿using MongoDB.Driver;
-
-namespace eXtensionSharp.Mongo;
+﻿namespace eXtensionSharp.Mongo;
 
 public interface IJMongoIndexInitializerRunner
 {
-    Task RunAsync();
+    void Run();
 }

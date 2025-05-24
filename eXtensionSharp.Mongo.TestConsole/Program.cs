@@ -6,12 +6,12 @@ var services = new ServiceCollection();
 
 services.AddJMongoDb("[enter mongodb connection string]", options =>
 {
-    options.AddInitializer<SampleDocumentIndexInitializer>();
+    options.AddInitializer<SampleDocumentConfiguration>();
 });
 
 var provider = services.BuildServiceProvider();
 
-await provider.UseJMongoDbAsync();
+provider.UseJMongoDbAsync();
 
 var factory = provider.GetRequiredService<IJMongoFactory>();
 var collection = factory.Create<SampleDocument>().GetCollection();
