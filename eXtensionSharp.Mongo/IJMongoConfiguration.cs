@@ -1,6 +1,6 @@
 ﻿namespace eXtensionSharp.Mongo;
 
-public interface IJMongoConfiguration
+public interface IJMongoConfiguration<T> where T : class
 {
-    void Configure(IJMongoFactory factory);
+    void Configure(JMongoBuilder<T> builder);
 }

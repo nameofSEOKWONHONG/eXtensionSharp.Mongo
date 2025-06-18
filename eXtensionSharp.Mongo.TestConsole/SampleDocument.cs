@@ -1,11 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 
 namespace eXtensionSharp.Mongo.TestConsole;
 
-[JMongoCollection("sample", "demo")]
 public class SampleDocument
 {
     [BsonId]
@@ -19,16 +17,16 @@ public class SampleDocument
     [BsonElement("createdAt")] public DateTimeOffset CreatedAt { get; set; }
 }
 
-public class SampleDocumentConfiguration: IJMongoConfiguration
+public class SampleDocumentConfiguration: IJMongoConfiguration<SampleDocument>
 {
-    public void Configure(IJMongoFactory factory)
+    public void Configure(JMongoBuilder<SampleDocument> builder)
     {
-        var collection = factory.Create<SampleDocument>().GetCollection();
-        collection.Indexes.CreateOne(
-            new CreateIndexModel<SampleDocument>(
-                Builders<SampleDocument>.IndexKeys.Ascending(x => x.CreatedAt),
-                new CreateIndexOptions { ExpireAfter = TimeSpan.FromDays(2) }
-            )
-        );
+        builder.ToDocument("sample", "demo")
+            .ToIndex(collection => collection.Indexes.CreateOne(
+                new CreateIndexModel<SampleDocument>(
+                    Builders<SampleDocument>.IndexKeys.Ascending(x => x.CreatedAt),
+                    new CreateIndexOptions { ExpireAfter = TimeSpan.FromDays(2) }
+                )
+            ));
     }
 }

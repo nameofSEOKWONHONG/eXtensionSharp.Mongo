@@ -1,25 +1,37 @@
 ﻿using eXtensionSharp.Mongo;
 using eXtensionSharp.Mongo.TestConsole;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 var services = new ServiceCollection();
 
+// 1. 서비스 구성
 services.AddJMongoDb("[enter mongodb connection string]", options =>
 {
-    options.AddInitializer<SampleDocumentConfiguration>();
+    options.ApplyConfiguration(new SampleDocumentConfiguration());
 });
 
+// 2. ServiceProvider 생성
 var provider = services.BuildServiceProvider();
-// 스코프를 생성하고 인덱스 초기화 실행
+
+// 3. UseJMongoDb()로 초기화 수행 (builder + index + 등록)
 using (var scope = provider.CreateScope())
 {
-    var runner = scope.ServiceProvider.GetRequiredService<IJMongoIndexInitializerRunner>();
-    runner.Run();
-    // 만약 비동기 메서드라면: await runner.RunAsync();
+    var appBuilder = new ApplicationBuilder(scope.ServiceProvider);
+    appBuilder.UseJMongoDb();
 }
 
+// 4. JMongoFactory 사용
 var factory = provider.GetRequiredService<IJMongoFactory>();
 var collection = factory.Create<SampleDocument>().GetCollection();
-var newItem = new SampleDocument { Name = "test", Age = 100 };
+
+var newItem = new SampleDocument
+{
+    Name = "test2",
+    Age = 200,
+    CreatedAt = DateTimeOffset.Now,
+    
+};
+
 await collection.InsertOneAsync(newItem);
 Console.WriteLine(newItem.Id);

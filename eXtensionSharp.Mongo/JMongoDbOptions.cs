@@ -4,10 +4,21 @@ namespace eXtensionSharp.Mongo;
 
 public class JMongoDbOptions
 {
-    internal List<Type> InitializerTypes { get; } = new();
+    internal List<Action<IMongoClient, IJMongoFactoryBuilder>> Executors { get; } = new();
 
-    public void AddInitializer<T>() where T : class, IJMongoConfiguration
+    public void ApplyConfiguration<T>(IJMongoConfiguration<T> config) where T : class
     {
-        InitializerTypes.Add(typeof(T));
+        Executors.Add((client, factory) =>
+        {
+            var builder = new JMongoBuilder<T>();
+            config.Configure(builder);
+
+            var collection = client
+                .GetDatabase(builder.DatabaseName)
+                .GetCollection<T>(builder.CollectionName);
+
+            builder.ApplyIndexes(collection);
+            factory.RegisterBuilder(builder);
+        });
     }
 }

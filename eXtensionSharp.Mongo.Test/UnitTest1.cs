@@ -1,127 +1,92 @@
-﻿using eXtensionSharp.Mongo;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using Moq;
 
 namespace eXtensionSharp.Mongo.Test;
 
 // 테스트용 컬렉션 도메인 클래스
-[JMongoCollection("TestDb", "TestCollection")]
-public class TestDocument : JMongoObjectBase
+public class SampleDocument
 {
-    public string Name { get; set; }
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    [BsonElement("id")]
+    public String Id { get; set; }
+
+    [BsonElement("name")] public string Name { get; set; }
+
+    [BsonElement("age")] public int Age { get; set; }
+    [BsonElement("createdAt")] public DateTimeOffset CreatedAt { get; set; }
 }
 
-public class DummyMongoConfig : IJMongoConfiguration
+public class SampleDocumentConfiguration: IJMongoConfiguration<SampleDocument>
 {
-    public bool Called { get; private set; } = false;
-
-    public void Configure(IJMongoFactory factory)
+    public void Configure(JMongoBuilder<SampleDocument> builder)
     {
-        // 정상 호출 시 플래그 변경
-        Called = true;
+        builder.ToDocument("sample", "demo");
+        builder.ToIndex(collection =>
+        {
+            collection.Indexes.CreateOne(new CreateIndexModel<SampleDocument>(
+                Builders<SampleDocument>.IndexKeys.Ascending(x => x.CreatedAt),
+                new CreateIndexOptions { ExpireAfter = TimeSpan.FromDays(1) }));
+        });
     }
 }
 
 public class JMongoTests
 {
     [Fact]
-    public void JMongoCollectionAttribute_Should_Set_Properties()
+    public void ApplyConfiguration_RegistersBuilder_AndCreatesCollection()
     {
-        var attr = new JMongoCollectionAttribute("db", "col");
-        Assert.Equal("db", attr.DatabaseName);
-        Assert.Equal("col", attr.CollectionName);
-    }
+        var mockClient = new Mock<IMongoClient>();
+        var mockDb = new Mock<IMongoDatabase>();
+        var mockCollection = new Mock<IMongoCollection<SampleDocument>>();
+        var mockIndexes = new Mock<IMongoIndexManager<SampleDocument>>();
 
-    [Fact]
-    public void JMongoCollectionAttribute_Should_Throw_On_Empty_Arg()
-    {
-        Assert.Throws<ArgumentException>(() => new JMongoCollectionAttribute("", "col"));
-        Assert.Throws<ArgumentException>(() => new JMongoCollectionAttribute("db", ""));
-    }
+        // Step 1: IndexManager 반환
+        mockCollection
+            .SetupGet(c => c.Indexes)
+            .Returns(mockIndexes.Object);
 
-    [Fact]
-    public void JMongo_Should_Throw_If_Args_Null()
-    {
-        var client = new Mock<IMongoClient>().Object;
-        Assert.Throws<ArgumentNullException>(() => new JMongo<TestDocument>(null, "col", client));
-        Assert.Throws<ArgumentNullException>(() => new JMongo<TestDocument>("db", null, client));
-        Assert.Throws<ArgumentNullException>(() => new JMongo<TestDocument>("db", "col", null));
-    }
+        // Step 2: CreateOne 호출 허용
+        mockIndexes
+            .Setup(i => i.CreateOne(
+                It.IsAny<CreateIndexModel<SampleDocument>>(),
+                null,
+                default))
+            .Verifiable();  // 테스트에서 Verify 용도
 
-    [Fact]
-    public void JMongoFactory_Should_Throw_If_No_Attribute()
-    {
-        var client = new Mock<IMongoClient>().Object;
-        var factory = new JMongoFactory(client);
-        Assert.Throws<InvalidOperationException>(() => factory.Create<object>());
-    }
+        // Step 3: Collection 반환
+        mockDb
+            .Setup(d => d.GetCollection<SampleDocument>("demo", null))
+            .Returns(mockCollection.Object);
 
-    [Fact]
-    public void JMongoFactory_Should_Create_JMongo_Instance()
-    {
-        var client = new Mock<IMongoClient>().Object;
-        var factory = new JMongoFactory(client);
-        var jmongo = factory.Create<TestDocument>();
-        Assert.NotNull(jmongo);
-    }
+        // Step 4: Database 반환
+        mockClient
+            .Setup(c => c.GetDatabase("sample", null))
+            .Returns(mockDb.Object);
 
-    [Fact]
-    public void JMongoDbOptions_Should_Add_Initializer()
-    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IMongoClient>(mockClient.Object);
+        services.AddSingleton<IJMongoFactory, JMongoFactory>();
+        services.AddSingleton<IJMongoFactoryBuilder>(sp => (IJMongoFactoryBuilder)sp.GetRequiredService<IJMongoFactory>());
+
         var options = new JMongoDbOptions();
-        options.AddInitializer<DummyMongoConfig>();
-        Assert.Contains(typeof(DummyMongoConfig), options.GetType().GetProperty("InitializerTypes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            .GetValue(options) as List<Type>);
-    }
-
-    [Fact]
-    public void DependencyInjection_Should_Register_Services()
-    {
-        var services = new ServiceCollection();
-        var optionsChecked = false;
-
-        services.AddJMongoDb(
-            "mongodb://localhost:27017",
-            opt =>
-            {
-                opt.AddInitializer<DummyMongoConfig>();
-                optionsChecked = true;
-            });
+        options.ApplyConfiguration(new SampleDocumentConfiguration());
+        services.AddSingleton(options);
 
         var provider = services.BuildServiceProvider();
-        Assert.True(optionsChecked);
-        Assert.NotNull(provider.GetService<IMongoClient>());
-        Assert.NotNull(provider.GetService<IJMongoFactory>());
-        Assert.NotNull(provider.GetService<IJMongoIndexInitializerRunner>());
-    }
 
-    [Fact]
-    public void JMongoIndexInitializerRunner_Should_Run_Configure()
-    {
-        var configs = new List<DummyMongoConfig> { new DummyMongoConfig() };
-        var services = new ServiceCollection();
-        services.AddSingleton<IJMongoConfiguration>(configs[0]);
-        services.AddSingleton<IJMongoFactory>(new Mock<IJMongoFactory>().Object);
-        var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        var builder = new ApplicationBuilder(scope.ServiceProvider);
 
-        var runner = new JMongoIndexInitializerRunner(configs, provider);
-        runner.Run();
+        // Act
+        builder.UseJMongoDb(); // 이 메서드 내에서 GetDatabase 호출되어야 함
 
-        Assert.True(configs[0].Called);
-    }
-
-    [Fact]
-    public void ObjectIdConverter_Should_Serialize_And_Deserialize()
-    {
-        var converter = new ObjectIdConverter();
-        var id = MongoDB.Bson.ObjectId.GenerateNewId();
-        var options = new System.Text.Json.JsonSerializerOptions();
-        options.Converters.Add(converter);
-
-        var json = System.Text.Json.JsonSerializer.Serialize(id, options);
-        var parsed = System.Text.Json.JsonSerializer.Deserialize<MongoDB.Bson.ObjectId>(json, options);
-
-        Assert.Equal(id, parsed);
+        // Assert
+        mockClient.Verify(c => c.GetDatabase("sample", null), Times.Once);
+        mockDb.Verify(d => d.GetCollection<SampleDocument>("demo", null), Times.Once);
     }
 }

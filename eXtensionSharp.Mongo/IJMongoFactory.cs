@@ -4,3 +4,4 @@ public interface IJMongoFactory
 {
     JMongo<T> Create<T>() where T : class;
 }
+
