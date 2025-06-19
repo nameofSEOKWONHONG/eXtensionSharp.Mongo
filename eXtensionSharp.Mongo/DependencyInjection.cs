@@ -31,11 +31,11 @@ public static class DependencyInjection
         using var scope = app.ApplicationServices.CreateScope();
         var options = scope.ServiceProvider.GetRequiredService<JMongoDbOptions>();
         var client  = scope.ServiceProvider.GetRequiredService<IMongoClient>();
-        var factory = scope.ServiceProvider.GetRequiredService<IJMongoFactoryBuilder>();
+        var builder = scope.ServiceProvider.GetRequiredService<IJMongoFactoryBuilder>();
 
         foreach (var exec in options.Executors)
         {
-            exec(client, factory); // 리플렉션, typeof, cast 전혀 없음
+            exec(client, builder); // 리플렉션, typeof, cast 전혀 없음
         }
     }
 }

@@ -26,9 +26,9 @@ public class SampleDocumentConfiguration: IJMongoConfiguration<SampleDocument>
     public void Configure(JMongoBuilder<SampleDocument> builder)
     {
         builder.ToDocument("sample", "demo");
-        builder.ToIndex(collection =>
+        builder.ToIndex(indexes =>
         {
-            collection.Indexes.CreateOne(new CreateIndexModel<SampleDocument>(
+            indexes.CreateOne(new CreateIndexModel<SampleDocument>(
                 Builders<SampleDocument>.IndexKeys.Ascending(x => x.CreatedAt),
                 new CreateIndexOptions { ExpireAfter = TimeSpan.FromDays(1) }));
         });

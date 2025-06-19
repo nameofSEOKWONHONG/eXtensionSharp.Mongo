@@ -16,6 +16,20 @@ public sealed class JMongoFactory : IJMongoFactory, IJMongoFactoryBuilder
     {
         _builders[typeof(T)] = builder ?? throw new ArgumentNullException(nameof(builder));
     }
+    
+    public bool TryGetBuilder<T>(out JMongoBuilder<T> builder) where T : class
+    {
+        if (_builders.TryGetValue(typeof(T), out var obj) && obj is JMongoBuilder<T> typed)
+        {
+            builder = typed;
+            return true;
+        }
+
+        builder = null!;
+        return false;
+    }
+
+    public IReadOnlyDictionary<Type, object> GetAllBuilders() => _builders;
 
     public JMongo<T> Create<T>() where T : class
     {

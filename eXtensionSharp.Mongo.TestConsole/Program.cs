@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 var services = new ServiceCollection();
 
 // 1. 서비스 구성
-services.AddJMongoDb("[enter mongodb connection string]", options =>
+services.AddJMongoDb("mongodb://localhost:27017", options =>
 {
     options.ApplyConfiguration(new SampleDocumentConfiguration());
 });
