@@ -23,7 +23,7 @@ using (var scope = provider.CreateScope())
 
 // 4. JMongoFactory 사용
 var factory = provider.GetRequiredService<IJMongoFactory>();
-var collection = factory.Create<SampleDocument>().GetCollection();
+var collection = factory.Create<SampleDocument>();
 
 var newItem = new SampleDocument
 {

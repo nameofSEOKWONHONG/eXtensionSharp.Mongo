@@ -1,7 +1,9 @@
-﻿namespace eXtensionSharp.Mongo;
+﻿using MongoDB.Driver;
+
+namespace eXtensionSharp.Mongo;
 
 public interface IJMongoFactory
 {
-    JMongo<T> Create<T>() where T : class;
+    IMongoCollection<T> Create<T>() where T : class;
 }
 

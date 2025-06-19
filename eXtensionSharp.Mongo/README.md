@@ -122,7 +122,7 @@ app.Run();
 
 ```csharp
 var factory = provider.GetRequiredService<IJMongoFactory>();
-var collection = factory.Create<SampleDocument>().GetCollection();
+var collection = factory.Create<SampleDocument>();
 
 var doc = new SampleDocument { Name = "test", Age = 30, CreatedAt = DateTimeOffset.UtcNow };
 await collection.InsertOneAsync(doc);
@@ -139,8 +139,3 @@ MIT License (자유롭게 사용/수정 가능)
 ## 👨‍💻 기여
 
 Pull Request, 기능 제안 모두 환영합니다.  
-향후 지원 예정:
-
-- Index 정의 DSL 개선
-- Migration 지원
-- MongoMemoryServer 기반 테스트 유틸

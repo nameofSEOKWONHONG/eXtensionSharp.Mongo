@@ -9,17 +9,17 @@ public static class DependencyInjection
     public static IServiceCollection AddJMongoDb(
         this IServiceCollection services,
         string connectionString,
-        Action<JMongoDbOptions> configure)
+        Action<JMongoConfigurationRegistry> configure)
     {
         if (string.IsNullOrWhiteSpace(connectionString))
             throw new ArgumentException("MongoDB connection string is required.");
 
         services.AddSingleton<IMongoClient>(_ => new MongoClient(connectionString));
-        services.AddSingleton<IJMongoFactory, JMongoFactory>();
-        services.AddSingleton<IJMongoFactoryBuilder>(sp => (IJMongoFactoryBuilder)sp.GetRequiredService<IJMongoFactory>());
+        services.AddSingleton<JMongoCollectionFactory>();
+        services.AddSingleton<IJMongoFactory>(sp => sp.GetRequiredService<JMongoCollectionFactory>());
+        services.AddSingleton<IJMongoFactoryBuilder>(sp => sp.GetRequiredService<JMongoCollectionFactory>());
 
-
-        var options = new JMongoDbOptions();
+        var options = new JMongoConfigurationRegistry();
         configure?.Invoke(options);
         services.AddSingleton(options); // 실행 시점에서만 사용됨
 
@@ -29,7 +29,7 @@ public static class DependencyInjection
     public static void UseJMongoDb(this IApplicationBuilder app)
     {
         using var scope = app.ApplicationServices.CreateScope();
-        var options = scope.ServiceProvider.GetRequiredService<JMongoDbOptions>();
+        var options = scope.ServiceProvider.GetRequiredService<JMongoConfigurationRegistry>();
         var client  = scope.ServiceProvider.GetRequiredService<IMongoClient>();
         var builder = scope.ServiceProvider.GetRequiredService<IJMongoFactoryBuilder>();
 

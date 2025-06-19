@@ -2,7 +2,7 @@
 
 namespace eXtensionSharp.Mongo;
 
-public class JMongoBuilder<T> where T : class
+public class JMongoCollectionBuilder<T> where T : class
 {
     internal string DatabaseName { get; private set; }
     internal string CollectionName { get; private set; }
@@ -12,7 +12,7 @@ public class JMongoBuilder<T> where T : class
     private readonly List<Action<IMongoIndexManager<T>>> _indexActions = new();
     private bool _indexApplied = false;
 
-    public JMongoBuilder<T> ToDocument(string dbName, string collectionName)
+    public JMongoCollectionBuilder<T> ToDocument(string dbName, string collectionName)
     {
         DatabaseName = dbName;
         CollectionName = collectionName;
@@ -42,7 +42,7 @@ public class JMongoBuilder<T> where T : class
     /// </summary>
     /// <param name="configure"></param>
     /// <returns></returns>
-    public JMongoBuilder<T> ToCollection(Action<CreateCollectionOptions<T>> configure)
+    public JMongoCollectionBuilder<T> ToCollection(Action<CreateCollectionOptions<T>> configure)
     {
         var options = new CreateCollectionOptions<T>();
         configure(options);
@@ -50,7 +50,7 @@ public class JMongoBuilder<T> where T : class
         return this;
     }
 
-    public JMongoBuilder<T> ToIndex(Action<IMongoIndexManager<T>> indexManager)
+    public JMongoCollectionBuilder<T> ToIndex(Action<IMongoIndexManager<T>> indexManager)
     {
         _indexActions.Add(indexManager);
         return this;

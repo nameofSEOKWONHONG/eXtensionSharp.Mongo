@@ -2,7 +2,7 @@
 
 namespace eXtensionSharp.Mongo;
 
-public class JMongoDbOptions
+public class JMongoConfigurationRegistry
 {
     internal List<Action<IMongoClient, IJMongoFactoryBuilder>> Executors { get; } = new();
 
@@ -10,7 +10,7 @@ public class JMongoDbOptions
     {
         Executors.Add((client, factory) =>
         {
-            var builder = new JMongoBuilder<T>();
+            var builder = new JMongoCollectionBuilder<T>();
             config.Configure(builder);
 
             var collection = client

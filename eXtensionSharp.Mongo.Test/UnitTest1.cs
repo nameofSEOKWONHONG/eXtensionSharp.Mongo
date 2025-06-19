@@ -1,39 +1,9 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using Moq;
 
 namespace eXtensionSharp.Mongo.Test;
-
-// 테스트용 컬렉션 도메인 클래스
-public class SampleDocument
-{
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    [BsonElement("id")]
-    public String Id { get; set; }
-
-    [BsonElement("name")] public string Name { get; set; }
-
-    [BsonElement("age")] public int Age { get; set; }
-    [BsonElement("createdAt")] public DateTimeOffset CreatedAt { get; set; }
-}
-
-public class SampleDocumentConfiguration: IJMongoConfiguration<SampleDocument>
-{
-    public void Configure(JMongoBuilder<SampleDocument> builder)
-    {
-        builder.ToDocument("sample", "demo");
-        builder.ToIndex(indexes =>
-        {
-            indexes.CreateOne(new CreateIndexModel<SampleDocument>(
-                Builders<SampleDocument>.IndexKeys.Ascending(x => x.CreatedAt),
-                new CreateIndexOptions { ExpireAfter = TimeSpan.FromDays(1) }));
-        });
-    }
-}
 
 public class JMongoTests
 {
@@ -70,10 +40,10 @@ public class JMongoTests
 
         var services = new ServiceCollection();
         services.AddSingleton<IMongoClient>(mockClient.Object);
-        services.AddSingleton<IJMongoFactory, JMongoFactory>();
+        services.AddSingleton<IJMongoFactory, JMongoCollectionFactory>();
         services.AddSingleton<IJMongoFactoryBuilder>(sp => (IJMongoFactoryBuilder)sp.GetRequiredService<IJMongoFactory>());
 
-        var options = new JMongoDbOptions();
+        var options = new JMongoConfigurationRegistry();
         options.ApplyConfiguration(new SampleDocumentConfiguration());
         services.AddSingleton(options);
 

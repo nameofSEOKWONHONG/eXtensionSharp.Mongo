@@ -2,8 +2,9 @@
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 
-namespace eXtensionSharp.Mongo.TestConsole;
+namespace eXtensionSharp.Mongo.Test;
 
+// 테스트용 컬렉션 도메인 클래스
 public class SampleDocument
 {
     [BsonId]
@@ -21,19 +22,12 @@ public class SampleDocumentConfiguration: IJMongoConfiguration<SampleDocument>
 {
     public void Configure(JMongoCollectionBuilder<SampleDocument> collectionBuilder)
     {
-        collectionBuilder.ToDocument("sample", "demo")
-            .ToCollection(options =>
-            {
-                options.Capped = false;
-                options.MaxDocuments = null;
-                options.MaxSize = null;
-            })
-            .ToIndex(indexes =>
-                indexes.CreateOne(
-                new CreateIndexModel<SampleDocument>(
-                    Builders<SampleDocument>.IndexKeys.Ascending(x => x.CreatedAt),
-                    new CreateIndexOptions { ExpireAfter = TimeSpan.FromDays(2) }
-                )
-            ));
+        collectionBuilder.ToDocument("sample", "demo");
+        collectionBuilder.ToIndex(indexes =>
+        {
+            indexes.CreateOne(new CreateIndexModel<SampleDocument>(
+                Builders<SampleDocument>.IndexKeys.Ascending(x => x.CreatedAt),
+                new CreateIndexOptions { ExpireAfter = TimeSpan.FromDays(1) }));
+        });
     }
 }
